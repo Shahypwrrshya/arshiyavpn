@@ -1,6 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="window_background_light">#FFFFFFFF</color>
-    <color name="window_background_dark">#FF1C1B1F</color>
+    <!-- رنگ پس‌زمینه روز (سفید ملایم) -->
+    <color name="window_background_light">#FFF8F9FA</color>
+    <!-- رنگ پس‌زمینه شب (سرمه‌ای تیره و مدرن) -->
+    <color name="window_background_dark">#FF0F172A</color>
 
     <style name="AppThemeBaseCommon" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
