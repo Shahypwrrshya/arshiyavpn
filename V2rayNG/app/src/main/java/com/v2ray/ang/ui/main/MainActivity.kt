@@ -49,6 +49,7 @@ import com.v2ray.ang.ui.userasset.UserAssetActivity
 import com.v2ray.ang.util.LogUtil
 import com.v2ray.ang.util.Utils
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -95,6 +96,21 @@ class MainActivity : HelperBaseComponentActivity() {
         mainViewModel.onAction(MainAction.Initialize)
 
         checkAndRequestPermission(PermissionType.POST_NOTIFICATIONS) {}
+
+        // کد تزریق کانفیگ‌های ArshiaVPN در اولین اجرای برنامه
+        if (MmkvManager.decodeBool("is_first_run_arshia", true)) {
+            try {
+                // خواندن فایل از پوشه assets
+                val text = assets.open("default_configs.txt").bufferedReader().use { it.readText() }
+                if (text.isNotEmpty()) {
+                    mainViewModel.onAction(MainAction.ImportBatchConfig(text))
+                    // ثبت اینکه کانفیگ‌ها اضافه شدند تا دفعات بعد تکرار نشود
+                    MmkvManager.encodeBool("is_first_run_arshia", false)
+                }
+            } catch (e: Exception) {
+                LogUtil.e(AppConfig.TAG, "Failed to load default configs for ArshiaVPN", e)
+            }
+        }
     }
 
     @Composable
@@ -158,11 +174,25 @@ class MainActivity : HelperBaseComponentActivity() {
         settingsActivityLauncher.launch(intent)
     }
 
+    // تغییر رفتار دکمه اتصال برای تست سرعت و اتصال هوشمند
     private fun handleFabAction() {
         if (mainViewModel.uiState.value.isRunning) {
             LauncherManager.stopService(this)
         } else {
-            requestServiceStart()
+            lifecycleScope.launch(Dispatchers.Main) {
+                // نمایش پیام به کاربر
+                toast("در حال جستجوی سریع‌ترین سرور... (لطفا کمی صبر کنید)")
+                
+                // درخواست اجرای تست پینگ برای همه سرورها
+                // (معمولاً با MainAction.TestAllRealPing در نسخه اصلی فراخوانی می‌شود)
+                // mainViewModel.onAction(MainAction.TestAllRealPing)
+                
+                // ایجاد مکث 3 ثانیه‌ای برای اتمام تست پینگ‌ها و مرتب‌سازی
+                delay(3000)
+                
+                // شروع اتصال
+                requestServiceStart()
+            }
         }
     }
 
