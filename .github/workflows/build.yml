@@ -19,14 +19,20 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-
-    - name: Build APK (Debug Mode)
-      run: ./gradlew assembleDebug --stacktrace
+    - name: Find and Build APK
+      run: |
+        # پیدا کردن مسیر فایل gradlew به صورت خودکار
+        GRADLE_PATH=$(dirname $(find . -name "gradlew" | head -1))
+        echo "Found gradlew in: $GRADLE_PATH"
+        cd $GRADLE_PATH
+        
+        # دادن دسترسی و ساخت برنامه
+        chmod +x gradlew
+        ./gradlew assembleDebug --stacktrace
 
     - name: Upload APK File
       uses: actions/upload-artifact@v4
       with:
         name: ArshiaVPN-App
-        path: app/build/outputs/apk/**/*.apk
+        # جستجوی خودکار فایل APK در تمام پوشه‌ها
+        path: '**/app/build/outputs/apk/**/*.apk'
