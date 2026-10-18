@@ -1,37 +1,38 @@
 name: Build ArshiaVPN
 
 on:
-  workflow_dispatch: # این خط باعث می‌شود دکمه اجرای دستی به گیت‌هاب اضافه شود
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: 1. Checkout Code and Submodules
+    - name: 1. Checkout Code
       uses: actions/checkout@v4
       with:
-        submodules: 'recursive' # بسیار مهم: دانلود هسته اصلی فیلترشکن
+        submodules: 'recursive'
 
     - name: 2. Setup Java JDK 17
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v5
       with:
         java-version: '17'
         distribution: 'temurin'
         cache: 'gradle'
 
-    - name: 3. Setup Go Environment
-      uses: actions/setup-go@v5
-      with:
-        go-version: '1.22' # موتور v2ray به این زبان نیاز دارد
-
-    - name: 4. Find and Build APK
+    - name: 3. Download Core Engine (libv2ray)
       run: |
-        # پیدا کردن مسیر دقیق فایل gradlew و اجرای آن
+        # پیدا کردن مسیر پروژه و ساخت پوشه کتابخانه‌ها
         WORK_DIR=$(dirname $(find . -name "gradlew" | head -n 1))
-        echo "Building in directory: $WORK_DIR"
         cd $WORK_DIR
-        
+        mkdir -p app/libs
+        # دانلود هسته اصلی فیلترشکن
+        wget -O app/libs/libv2ray.aar https://github.com/2dust/AndroidLibV2rayLite/releases/latest/download/libv2ray.aar || wget -O app/libs/libv2ray.aar https://github.com/2dust/AndroidLibXrayLite/releases/latest/download/libv2ray.aar
+
+    - name: 4. Build APK
+      run: |
+        WORK_DIR=$(dirname $(find . -name "gradlew" | head -n 1))
+        cd $WORK_DIR
         chmod +x gradlew
         ./gradlew assembleDebug --stacktrace
 
@@ -39,4 +40,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ArshiaVPN-Final-App
-        path: '**/app/build/outputs/apk/debug/*.apk'
+        path: '**/app/build/outputs/apk/**/*.apk'
